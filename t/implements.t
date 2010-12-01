@@ -3,7 +3,6 @@ use strict;
 use warnings;
 
 use Test::More tests => 21;
-use Test::Exception;
 use Test::NoWarnings;
 
 use lib 't/lib';
@@ -85,25 +84,29 @@ ok my $o = Test::MooseX::Types::Implements->new(),
 ok my $nm = Test::MooseX::Types::NonMoose->new(),
     "non-moose test object created";
 
-throws_ok {
+eval {
     $o->breakable( 123 );
-} qr/Object '123' does not implement required role/,
-    "Int is not an Object";
+};
+like($@, qr/Object '123' does not implement required role/,
+    "Int is not an Object");
 
-throws_ok {
+eval {
     $o->breakable( [qw( 123 456 )] );
-} qr/Object '.*?' does not implement required role/,
-    "ArrayRef is not an Object";
+};
+like($@, qr/Object '.*?' does not implement required role/,
+    "ArrayRef is not an Object");
 
-throws_ok {
+eval {
     $o->breakable( { k1 => 'v1', k2 => 'v2' } );
-} qr/Object '.*?' does not implement required role/,
-    "HashRef is not an Object";
+};
+like($@, qr/Object '.*?' does not implement required role/,
+    "HashRef is not an Object");
 
-throws_ok {
+eval {
     $o->breakable( $nm );
-} qr/Object '.*?' does not implement required role/,
-    "Non-Moose objects are not supported";
+};
+like($@, qr/Object '.*?' does not implement required role/,
+    "Non-Moose objects are not supported");
 
 
 my $tank = TMTI::Class::Tank->new();
@@ -112,40 +115,39 @@ isa_ok($tank, 'TMTI::Class::Tank');
 my $car = TMTI::Class::Car->new();
 isa_ok($car, 'TMTI::Class::Car');
 
-lives_ok {
-    $o->breakable( $car );
-} "Car implements Breakable interface";
+ok $o->breakable( $car ),
+    "Car implements Breakable interface";
 
-lives_ok {
-    $o->mybreakable( $car );
-} "...and subtyping works";
+ok $o->mybreakable( $car ),
+    "...and subtyping works";
 
-lives_ok {
-    $o->breakable_driveable( $car );
-} "Car implements both Breakable and Driveable interfaces";
+ok $o->breakable_driveable( $car ),
+    "Car implements both Breakable and Driveable interfaces";
 
-lives_ok {
-    $o->mybreakable_driveable( $car );
-} "...and subtyping works";
+ok $o->mybreakable_driveable( $car ),
+    "...and subtyping works";
 
-throws_ok {
+eval {
     $o->breakable( $tank );
-} qr/Object '.*?' does not implement required role/,
-    "Tank does not implement Breakable interface";
+};
+like($@, qr/Object '.*?' does not implement required role/,
+    "Tank does not implement Breakable interface");
 
-throws_ok {
+eval {
     $o->mybreakable( $tank );
-} qr/Object '.*?' does not implement TMTI::Breakable/,
-    "...and subtyping works";
+};
+like($@, qr/Object '.*?' does not implement TMTI::Breakable/,
+    "...and subtyping works");
 
-throws_ok {
+eval {
     $o->breakable_driveable( $tank );
-} qr/Object '.*?' does not implement required role/,
-    "Tank does not implement both Breakable and Driveable interfaces";
+};
+like($@, qr/Object '.*?' does not implement required role/,
+    "Tank does not implement both Breakable and Driveable interfaces");
 
-throws_ok {
+eval {
     $o->mybreakable_driveable( $tank );
-} qr/Object '.*?' does not implement both TMTI::Breakable and TMTI::Driveable/,
-    "...and subtyping works";
-
+};
+like($@, qr/Object '.*?' does not implement both TMTI::Breakable and TMTI::Driveable/,
+    "...and subtyping works");
 
