@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 21;
+use Test::More tests => 25;
 use Test::NoWarnings;
 
 use lib 't/lib';
@@ -35,6 +35,7 @@ BEGIN {
 {
     package Test::MooseX::Types::Implements;
     use Moose;
+    use MooseX::Types::Moose qw( ArrayRef );
     use MooseX::Types::Implements qw( Implements );
     use TMTI::MyTypes qw( Breakable BreakableDriveable );
 
@@ -46,6 +47,24 @@ BEGIN {
     has 'mybreakable' => (
         is => 'rw',
         isa => Breakable,
+    );
+
+    has 'arrayofbreakable' => (
+        is => 'rw',
+        isa => ArrayRef[Implements[qw(TMTI::Breakable)]],
+        traits  => ['Array'],
+        handles => {
+            add_breakable => 'push',
+        },
+    );
+
+    has 'arrayofmybreakable' => (
+        is => 'rw',
+        isa => ArrayRef[Breakable],
+        traits  => ['Array'],
+        handles => {
+            add_mybreakable => 'push',
+        },
     );
 
     has 'breakable_driveable' => (
@@ -121,6 +140,12 @@ ok $o->breakable( $car ),
 ok $o->mybreakable( $car ),
     "...and subtyping works";
 
+ok $o->add_breakable( $car ),
+    "Car can be pushed to ArrayRef, as it implements Breakable interface";
+
+ok $o->add_mybreakable( $car ),
+    "...and subtyping works";
+
 ok $o->breakable_driveable( $car ),
     "Car implements both Breakable and Driveable interfaces";
 
@@ -135,6 +160,18 @@ like($@, qr/Object '.*?' does not implement required role/,
 
 eval {
     $o->mybreakable( $tank );
+};
+like($@, qr/Object '.*?' does not implement TMTI::Breakable/,
+    "...and subtyping works");
+
+eval {
+    $o->add_breakable( $tank );
+};
+like($@, qr/Object '.*?' does not implement required role/,
+    "Tank cannot be pushed to ArrayRef, as it does not implement Breakable interface");
+
+eval {
+    $o->add_mybreakable( $tank );
 };
 like($@, qr/Object '.*?' does not implement TMTI::Breakable/,
     "...and subtyping works");
