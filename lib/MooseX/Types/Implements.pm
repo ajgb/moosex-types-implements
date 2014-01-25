@@ -4,6 +4,7 @@ package MooseX::Types::Implements;
 #ABSTRACT: Require objects to implement a role/interface
 
 use Class::MOP;
+use Class::Load;
 use MooseX::Types::Moose qw( Object RoleName ArrayRef );
 use Moose::Util::TypeConstraints;
 
@@ -38,7 +39,7 @@ sub Implements {
     shift @_;
 
     for my $role ( @roles ) {
-        Class::MOP::load_class($role);
+        Class::Load::load_class($role);
 
         # need to check it here, otherwise a cryptic error message will pop
         # out, eg:
